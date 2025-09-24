@@ -16,6 +16,7 @@ function setup() {
 
   // setup controls
   setupKeyControl();
+  setupMIDIControl();
 
   setInterval(function() {
     detectKeyControl()
@@ -32,6 +33,28 @@ function draw() {
   // apply the shader to a rectangle taking up the full canvas
   plane(width, height);
 }
+
+//MIDI Handling
+function setupMIDIControl() {
+  WebMidi.enable().then(() => {
+    let digitakt = WebMidi.getInputByName("Elektron Digitakt");
+    digitakt.addListener("pitchbend", e => {
+      let val = (e.value + 1) / 2;
+      r = val;
+    })
+    digitakt.addListener("channelaftertouch", e => {
+      let val = e.value;
+      g = val;
+    })
+    digitakt.addListener("controlchange", e => {
+      if (e.controller.number == 1) {
+        let val = e.value;
+        b = val;
+      }
+    })
+  });
+}
+
 
 //Key Handling
 //Keycode Reference: https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
