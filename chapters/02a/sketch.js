@@ -1,18 +1,16 @@
 // Standard sketch from https://p5js.org/tutorials/intro-to-shaders/
 
 let myShader;
-let r = 0.0;
-let g = 0.0;
-let b = 0.0;
+let midi_ccs = new Array(128).fill(0.0);
 
 function preload() {
   // load each shader file (don't worry, we will come back to these!)
-  myShader = loadShader('02/shader.vert', '02/shader.frag');
+  myShader = loadShader('./shader.vert', './shader.frag');
 }
 
 function setup() {
   // the canvas has to be created with WEBGL mode
-  createCanvas(400, 400, WEBGL);
+  createCanvas(windowWidth, windowHeight, WEBGL);
 
   // setup controls
   setupKeyControl();
@@ -28,7 +26,9 @@ function draw() {
   // shader() sets the active shader, which will be applied to what is drawn next
   shader(myShader);
 
-  myShader.setUniform('u_color', [r, g, b]);
+  myShader.setUniform('u_midi', midi_ccs);
+  myShader.setUniform('u_time', millis() / 1000.0);
+  myShader.setUniform('u_resolution', [width, height]);
 
   // apply the shader to a rectangle taking up the full canvas
   plane(width, height);
@@ -38,23 +38,30 @@ function draw() {
 function setupMIDIControl() {
   WebMidi.enable().then(() => {
     let digitakt = WebMidi.getInputByName("Elektron Digitakt");
+    if (!digitakt) {
+      console.log("Digitakt not found");
+      return;
+    }
+
     digitakt.addListener("pitchbend", e => {
       let val = (e.value + 1) / 2;
-      r = val;
-    })
+      console.log("Pitch Bend: " + val);
+      midi_ccs[0] = val;
+    });
+    
     digitakt.addListener("channelaftertouch", e => {
       let val = e.value;
-      g = val;
-    })
+      midi_ccs[1] = val;
+    });
+
     digitakt.addListener("controlchange", e => {
-      if (e.controller.number == 1) {
+      if (e.controller.number == 1) { // Mod Wheel
         let val = e.value;
-        b = val;
+        midi_ccs[2] = val;
       }
-    })
+    });
   });
 }
-
 
 //Key Handling
 //Keycode Reference: https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
@@ -77,7 +84,6 @@ function setupKeyControl() {
           colorKeys.push(e.key);
       }
     }
-    
   });
 
   document.addEventListener('keyup', function(e) {
