@@ -15,7 +15,7 @@ vec2 brickTile(vec2 _st, float _zoom){
     float x = _st.x;
     float y = _st.y;
     
-    float t = u_time * 10. * u_midi[1];
+    float t = u_time * 10. * u_midi[2];
 
     // Here is where the offset is happening
     _st.x += step(1., mod(y, 2.0)) * 
@@ -37,7 +37,7 @@ vec2 brickTileOp(vec2 _st, float _zoom){
     float x = _st.x;
     float y = _st.y;
     
-    float t = u_time * 3. * u_midi[1];
+    float t = u_time * 3. * u_midi[2];
 
     // Here is where the offset is happening
     _st.x += step(1., mod(y + 1., 2.0)) * 
@@ -88,7 +88,7 @@ void main()
     float b = 0.75 - circle(st_b, vec2(0.5), 0.4);
     
     // //Big circle
-    float pct = circle(st, vec2(0.0), max(u_midi[0], 0.0000001) * 35.0);
+    float pct = circle(st, vec2(0.0), max(u_midi[1], 0.0000001) * 35.0);
     
     color = mix(color, vec3(r,g,b), 1.0);
     color = mix(color, vec3(1.-b,1.-r,1.-g), pct);

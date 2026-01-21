@@ -43,21 +43,10 @@ function setupMIDIControl() {
       return;
     }
 
-    digitakt.addListener("pitchbend", e => {
-      let val = (e.value + 1) / 2;
-      console.log("Pitch Bend: " + val);
-      midi_ccs[0] = val;
-    });
-    
-    digitakt.addListener("channelaftertouch", e => {
-      let val = e.value;
-      midi_ccs[1] = val;
-    });
-
     digitakt.addListener("controlchange", e => {
-      if (e.controller.number == 1) { // Mod Wheel
+      if (e.controller.number >= 0 && e.controller.number < midi_ccs.length) {
         let val = e.value;
-        midi_ccs[2] = val;
+        midi_ccs[e.controller.number] = val;
       }
     });
   });
