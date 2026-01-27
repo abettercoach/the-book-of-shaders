@@ -104,5 +104,5 @@ void main()
     // //Big circle
     float pct = circle(st, vec2(0.0), u_radius);
         
-    gl_FragColor = vec4(pct,0.0,0.0, 1.0);
+    gl_FragColor = vec4(pct,0.0,0.0,1.0);
 }

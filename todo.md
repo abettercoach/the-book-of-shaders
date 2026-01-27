@@ -14,17 +14,20 @@
     - Implement phase accumulation
         - https://www.gkbrk.com/phase-accumulator
         
-2. MIDI Channels
-    - Try to read multiple MIDI channels with WebMIDI
-    - "To change the MIDI channel for listening with WebMIDI, you use the addListener method on a specific input device and filter by the channels option, passing an array like {channels: [1, 3]} to listen to specific channels (1-16), or omit it to listen to all; this involves selecting your device in the WebMIDI app and configuring its listener to pick up only the desired MIDI channel messages."
 
 ### 2026 Jan 26
+
+0. MIDI Channels
+    - Reading multiple MIDI channels with WebMIDI
+    device.addListener("controlchange", e => {
+      if (e.message.channel == channel) {
+        callback(e.controller.number, e.value);
+      }
+    });
 
 a. Circle
     1. Initial Value
     2. Interpolation
-b. Oscillation
-    1. 
 
 ### 2026 Jan 22
 

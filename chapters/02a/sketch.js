@@ -42,33 +42,12 @@ function draw() {
   myShader.setUniform('u_time', millis() / 1000.0);
 
   for (let [k,v] of Object.entries(uniforms)) {
-    console.log(uniforms, k, v);
     let u = uniforms[k];
     u.update();
   }
 
   // apply the shader to a rectangle taking up the full canvas
   plane(width, height);
-}
-
-//MIDI Handling
-function setupMIDIControl() {
-  WebMidi.enable().then(() => {
-    let digitakt = WebMidi.getInputByName("Elektron Digitakt");
-    if (!digitakt) {
-      console.log("Digitakt not found");
-      return;
-    }
-
-    console.log(`Listening to Digitakt`);
-    digitakt.addListener("controlchange", e => {
-      console.log(e);
-      if (e.controller.number >= 0 && e.controller.number < midi_ccs.length) {
-        let val = e.value;
-        midi_ccs[e.controller.number] = val;
-      }
-    });
-  });
 }
 
 function bindUniform(name, initialValue=0.0) {
@@ -86,6 +65,7 @@ function bindUniform(name, initialValue=0.0) {
   return uniforms[name];
 }
 
+//MIDI Handling
 function onMIDI(channel, callback) {
   WebMidi.enable().then(() => {
     let digitakt = WebMidi.getInputByName("Elektron Digitakt");
