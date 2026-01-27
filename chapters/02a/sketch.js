@@ -1,7 +1,11 @@
-// Standard sketch from https://p5js.org/tutorials/intro-to-shaders/
+// by iris enrique
+// Midi Controlled Shader
+// Elektron Digitakt | Proj "Shaders" Bnk A 
+// Circle: Ch 1 
+
 
 let myShader;
-let midi_ccs = new Array(128).fill(0.0);
+let uniforms = {};
 
 function preload() {
   // load each shader file (don't worry, we will come back to these!)
@@ -13,8 +17,19 @@ function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
 
   // setup controls
-  setupKeyControl();
-  setupMIDIControl();
+  // setupKeyControl();
+
+  // Circle – Midi Ch01
+
+  shader(myShader);
+
+  let u_radius = bindUniform('u_radius', 20.0);
+  onMIDI(1, (cc, value) => {
+    let radius = value * 50;
+    u_radius.setTarget(radius);
+  });
+
+  myShader.setUniform('u_resolution', [width, height]);
 
   setInterval(function() {
     detectKeyControl()
@@ -23,12 +38,14 @@ function setup() {
 
 function draw() {
   noStroke();
-  // shader() sets the active shader, which will be applied to what is drawn next
-  shader(myShader);
 
-  myShader.setUniform('u_midi', midi_ccs);
   myShader.setUniform('u_time', millis() / 1000.0);
-  myShader.setUniform('u_resolution', [width, height]);
+
+  for (let [k,v] of Object.entries(uniforms)) {
+    console.log(uniforms, k, v);
+    let u = uniforms[k];
+    u.update();
+  }
 
   // apply the shader to a rectangle taking up the full canvas
   plane(width, height);
@@ -43,10 +60,43 @@ function setupMIDIControl() {
       return;
     }
 
+    console.log(`Listening to Digitakt`);
     digitakt.addListener("controlchange", e => {
+      console.log(e);
       if (e.controller.number >= 0 && e.controller.number < midi_ccs.length) {
         let val = e.value;
         midi_ccs[e.controller.number] = val;
+      }
+    });
+  });
+}
+
+function bindUniform(name, initialValue=0.0) {
+  uniforms[name] = {
+    current: initialValue,
+    value: initialValue,
+    setTarget: function(v) {
+      this.value = v;
+    },
+    update: function() {
+      this.current += (this.value - this.current) * 0.1;
+      myShader.setUniform(name, this.current);
+    }
+  }; 
+  return uniforms[name];
+}
+
+function onMIDI(channel, callback) {
+  WebMidi.enable().then(() => {
+    let digitakt = WebMidi.getInputByName("Elektron Digitakt");
+    if (!digitakt) {
+      console.log("Digitakt not found");
+      return;
+    }
+    console.log(`Listening to Digitakt on channel ${channel}`);
+    digitakt.addListener("controlchange", e => {
+      if (e.message.channel == channel) {
+        callback(e.controller.number, e.value);
       }
     });
   });
@@ -85,7 +135,6 @@ function setupKeyControl() {
           colorKeys.splice(index, 1)[0]; 
       }
     }
-
   });
 }
 
