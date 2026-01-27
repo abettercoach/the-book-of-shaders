@@ -24,7 +24,7 @@ function setup() {
   shader(myShader);
 
   let u_radius = bindUniform('u_radius', 20.0);
-  onMIDI(1, (cc, value) => {
+  onMIDI(1, 1, (value) => {
     let radius = value * 50;
     u_radius.setTarget(radius);
   });
@@ -66,7 +66,7 @@ function bindUniform(name, initialValue=0.0) {
 }
 
 //MIDI Handling
-function onMIDI(channel, callback) {
+function onMIDI(channel, cc, callback) {
   WebMidi.enable().then(() => {
     let digitakt = WebMidi.getInputByName("Elektron Digitakt");
     if (!digitakt) {
@@ -75,8 +75,9 @@ function onMIDI(channel, callback) {
     }
     console.log(`Listening to Digitakt on channel ${channel}`);
     digitakt.addListener("controlchange", e => {
-      if (e.message.channel == channel) {
-        callback(e.controller.number, e.value);
+      console.log(e.message.channel, e.controller.number, e.value);
+      if (e.message.channel == channel && e.controller.number == cc) {
+        callback(e.value);
       }
     });
   });
