@@ -11,6 +11,7 @@ uniform float u_time;
 
 uniform float u_midi[128];
 uniform float u_radius;
+uniform float u_oscillator;
 
 float random (float n) {
     return fract(sin(n) * 43758.5453123);
@@ -102,7 +103,7 @@ void main()
 
 
     // //Big circle
-    float pct = circle(st, vec2(0.0), u_radius);
+    float pct = circle(st, vec2(u_oscillator), u_radius);
         
     gl_FragColor = vec4(pct,0.0,0.0,1.0);
 }

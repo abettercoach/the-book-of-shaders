@@ -1,19 +1,15 @@
 # To Do
 
 1. Oscillators!
-    - We're moving all MIDI processing into JS and out of GLSL for now.
-    - No CC uniforms, but instead create oscillators and pass the value over.
-        - Let's just do the zoom oscillator first, and we'll deal with the rest later.
-    - Create an oscillation function (let's begin with harmonic), pass the MIDI CCs as params.
-        - Linear (Harmonic) -> Sinusodial
-            - Amplitude
-            - Midpoint
-            - Frequency
-            - Offset
-        - Nonlinear (Relaxation) -> Non-Sinusodial (eg. square, triangle, sawtooth)
-    - Implement phase accumulation
-        - https://www.gkbrk.com/phase-accumulator
+    - What if we try to plot and visualize the values? This could be good for a presentation.
+    - Let's try waiting until a value is close to zero before changing the frequency, to see if we get something smoother there
         
+### 2026 Jan 27
+
+1. bindUniformToCh
+    - For oscillators
+2. First try at oscillators
+    - Works better, but not as well as I would like too. Somestimes the movement is smooth. Sometimes it's not.
 
 ### 2026 Jan 26
 

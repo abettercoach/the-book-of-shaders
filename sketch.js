@@ -23,11 +23,11 @@ function setup() {
 
   shader(myShader);
 
-  let u_radius = bindUniform('u_radius', 20.0);
-  onMIDI(1, 1, (value) => {
-    let radius = value * 50;
-    u_radius.setTarget(radius);
+  bindUniformToMidiCC('u_radius', 1, 1, 20.0, (value) => { 
+    return value * 50.0 
   });
+
+  bindOscillatorToMidiCh('u_oscillator', 2);
 
   myShader.setUniform('u_resolution', [width, height]);
 
@@ -50,19 +50,85 @@ function draw() {
   plane(width, height);
 }
 
+function bindOscillatorToMidiCh(name, channel, options={type: 'sine', frequencyCC: 1, amplitudeCC: 2, midpointCC: 3, offsetCC: 4}) {
+  let uniform = bindUniform(name, 0.0);
+  let oscillator = {
+    type: options.type || 'sine',
+    frequency: 1.0,
+    amplitude: 1.0,
+    midpoint: 0.0,
+    offset: 0.0
+  };
+
+  onMIDI(channel, options.frequencyCC, (value) => {
+    let v = value;
+    oscillator.targetFrequency = map(v, 0, 1, 0.01, 4.0);
+  });
+
+  onMIDI(channel, options.amplitudeCC, (value) => {
+    let v = value;
+    oscillator.amplitude = map(v, 0, 1, 0.0, 1.0);
+  });
+
+  onMIDI(channel, options.midpointCC, (value) => {
+    let v = value;
+    oscillator.midpoint = map(v, 0, 1, -1.0, 1.0);
+  });
+
+  onMIDI(channel, options.offsetCC, (value) => {
+    let v = value;
+    oscillator.offset = map(v, 0, 1, -440.0, 440.0);
+  });
+
+  let osc = (x) => {
+    let t = millis() / 1000.0;
+    switch(options.type) {
+      case 'sine':
+        return sin(TWO_PI * x * t);
+      case 'triangle':
+        return asin(sin(TWO_PI * x * t)) * (2.0 / PI);
+      case 'square':
+        return x % 1.0 < 0.5 ? 1.0 : -1.0;
+      case 'sawtooth':
+        return 2.0 * (t * x - floor(0.5 + t * x));
+      default:
+        return sin(TWO_PI * x * t);
+    }
+  };
+  
+  setInterval(function() {
+    if (oscillator.frequency < oscillator.targetFrequency) {
+      oscillator.frequency += 0.0005;
+    } else if (oscillator.frequency > oscillator.targetFrequency) {
+      oscillator.frequency -= 0.0005;
+    }
+
+    let {frequency, amplitude, midpoint, offset} = oscillator;
+    let value = midpoint + amplitude * osc(frequency);
+    uniforms[name].setTarget(value);
+  }, 1000 / 60);
+}
+
+function bindUniformToMidiCC(name, channel, cc, initialValue=0.0, mapper=(v) => v) {
+  bindUniform(name, initialValue);
+  onMIDI(channel, cc, (value) => {
+    let v = mapper(value);
+    uniforms[name].setTarget(v);
+  });
+}
+
 function bindUniform(name, initialValue=0.0) {
   uniforms[name] = {
     current: initialValue,
-    value: initialValue,
+    targetValue: initialValue,
     setTarget: function(v) {
-      this.value = v;
+      this.targetValue = v;
     },
     update: function() {
-      this.current += (this.value - this.current) * 0.1;
+      this.current += (this.targetValue - this.current) * 0.1;
       myShader.setUniform(name, this.current);
     }
   }; 
-  return uniforms[name];
 }
 
 //MIDI Handling
@@ -75,7 +141,6 @@ function onMIDI(channel, cc, callback) {
     }
     console.log(`Listening to Digitakt on channel ${channel}`);
     digitakt.addListener("controlchange", e => {
-      console.log(e.message.channel, e.controller.number, e.value);
       if (e.message.channel == channel && e.controller.number == cc) {
         callback(e.value);
       }
